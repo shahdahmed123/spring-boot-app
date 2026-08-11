@@ -49,7 +49,7 @@ spring-ecommerce-app/
 ├── database/
 │   └── sql_script.sql
 ├── docs/
-│   └── architecture.svg
+│   └── architecture.jpg
 ├── src/
 ├── .dockerignore
 ├── .env
