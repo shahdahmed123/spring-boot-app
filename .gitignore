@@ -38,4 +38,11 @@ build/
 ### Mac OS ###
 .DS_Store
 
+.git
+.gitignore
+README.md
+docs
+target
+.idea
+*.iml
 .env

@@ -1,0 +1,73 @@
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: ecommerce-mysql
+    restart: unless-stopped
+
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/sql_script.sql:/docker-entrypoint-initdb.d/sql_script.sql:ro
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${MYSQL_ROOT_PASSWORD}"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+    networks:
+      - ecommerce-network
+
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: ecommerce-app
+    restart: unless-stopped
+
+    environment:
+      hibernate.connection.driver_class: ${HIBERNATE_DRIVER}
+      hibernate.connection.url: ${HIBERNATE_URL}
+      hibernate.connection.username: ${MYSQL_USER}
+      hibernate.connection.password: ${MYSQL_PASSWORD}
+      hibernate.dialect: ${HIBERNATE_DIALECT}
+      hibernate.show_sql: ${HIBERNATE_SHOW_SQL}
+      hibernate.hbm2ddl.auto: ${HIBERNATE_DDL_AUTO}
+      hibernate.current_session_context_class: ${HIBERNATE_SESSION_CONTEXT}
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+    ports:
+      - "8080:8080"
+
+    networks:
+      - ecommerce-network
+
+
+volumes:
+  mysql_data:
+
+
+networks:
+  ecommerce-network:
+    driver: bridge
