@@ -6,7 +6,7 @@ A Spring MVC e-commerce application containerized with Docker and integrated wit
 
 ## Architecture
 
-![Architecture Diagram](docs/architecture.jpg)
+![Architecture Diagram](docs/images/architecture.jpg)
 
 ```text
 Browser
