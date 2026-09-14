@@ -385,6 +385,151 @@ The Dockerized application was validated end-to-end:
 - The inserted product and details were verified directly in MySQL.
 - No Java source code changes were required for the Dockerization.
 
+
+
+## Amazon ECR
+
+The Spring Boot application is containerized using Docker, and the application image is stored in a private Amazon Elastic Container Registry (Amazon ECR) repository.
+
+The project uses **versioned Docker images** instead of relying on the `latest` tag.
+
+### ECR Configuration
+
+The ECR registry and image version are configured through environment variables in `.env`:
+
+```env
+ECR_REGISTRY=your-account-id.dkr.ecr.eu-north-1.amazonaws.com
+IMAGE_TAG=v1.2.0
+```
+
+* `ECR_REGISTRY`: AWS ECR registry URL.
+* `IMAGE_TAG`: The version of the application image to deploy.
+
+### ECR Image
+
+The application image follows this naming convention:
+
+```text
+<ECR_REGISTRY>/spring-boot-app:<IMAGE_TAG>
+```
+
+For example:
+
+```text
+114373721523.dkr.ecr.eu-north-1.amazonaws.com/spring-boot-app:v1.2.0
+```
+
+### Build and Push a New Version
+
+To publish a new application version to ECR:
+
+#### 1. Authenticate Docker with Amazon ECR
+
+```bash
+aws ecr get-login-password --region eu-north-1 | \
+docker login \
+  --username AWS \
+  --password-stdin $ECR_REGISTRY
+```
+
+#### 2. Build the Docker Image
+
+```bash
+docker build -t spring-boot-app:$IMAGE_TAG .
+```
+
+#### 3. Tag the Image
+
+```bash
+docker tag spring-boot-app:$IMAGE_TAG \
+  $ECR_REGISTRY/spring-boot-app:$IMAGE_TAG
+```
+
+#### 4. Push the Image to ECR
+
+```bash
+docker push \
+  $ECR_REGISTRY/spring-boot-app:$IMAGE_TAG
+```
+
+After pushing, the new version is available in the ECR repository.
+
+### Running the Application from ECR
+
+The `docker-compose.yml` is configured to pull the application image directly from Amazon ECR:
+
+```yaml
+app:
+  image: ${ECR_REGISTRY}/spring-boot-app:${IMAGE_TAG}
+```
+
+After configuring the `.env` file, authenticate Docker with ECR and start the application:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+Docker Compose pulls the specified version of the Spring Boot image from ECR and starts it together with the MySQL container.
+
+### Updating the Application Version
+
+To deploy a new version:
+
+1. Build the new Docker image.
+2. Push the new version to ECR.
+3. Update `IMAGE_TAG` in `.env`.
+
+For example:
+
+```env
+IMAGE_TAG=v1.3.0
+```
+
+Then run:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+This allows different application versions to be deployed without modifying the Docker Compose configuration.
+
+### Deployment Workflow
+
+```text
+        Source Code
+             │
+             ▼
+        Dockerfile
+             │
+             ▼
+     Docker Image
+       v1.2.0
+             │
+             ▼
+      Amazon ECR
+             │
+             │ docker compose pull
+             ▼
+     Docker Compose
+             │
+       ┌─────┴─────┐
+       ▼           ▼
+ Spring Boot      MySQL
+ Container       Container
+       │
+       ▼
+  Port 8080
+```
+
+### Security
+
+* `.env` contains environment-specific values and must not be committed to GitHub.
+* `.env.example` contains placeholders and can be committed.
+* AWS credentials must never be stored in `.env`, Dockerfiles, or source code.
+* ECR authentication is performed using the AWS CLI.
+
 ## License
 
 This project is intended for educational and portfolio purposes.

@@ -36,9 +36,7 @@ services:
 
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ${ECR_REGISTRY}/spring-boot-app:${IMAGE_TAG}
 
     container_name: ecommerce-app
     restart: unless-stopped
