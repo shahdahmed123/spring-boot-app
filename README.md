@@ -388,6 +388,12 @@ The Dockerized application was validated end-to-end:
 
 
 ## Amazon ECR
+## Architecture
+
+![Architecture Diagram](docs/images/aws_ecr.jpg)
+
+
+
 
 The Spring Boot application is containerized using Docker, and the application image is stored in a private Amazon Elastic Container Registry (Amazon ECR) repository.
 
